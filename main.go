@@ -3,17 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/sethvargo/go-envconfig"
 	"log"
 	"net/http"
 	"os"
-	"github.com/sethvargo/go-envconfig"
+	"time"
 )
 
 type Options struct {
 	// Port the port to lisetn to
 	Port string `env:"PORT,default=8080"`
-}
 
+	// Fail should we fail at all?
+	Fail bool `env:"FAIL"`
+
+	// CrashDuration should we periodically fail
+	CrashDuration time.Duration `env:"CRASH_DURATION"`
+}
 
 func main() {
 	o := &Options{}
@@ -25,14 +31,24 @@ func main() {
 		return
 	}
 
+	if o.Fail {
+		if o.CrashDuration.Milliseconds() > 0 {
+			f := func() {
+				fmt.Println("simulating crash now...")
+				os.Exit(1)
+			}
+			fmt.Printf("will crash in %v\n", o.CrashDuration)
+			t := time.AfterFunc(o.CrashDuration, f)
+			defer t.Stop()
+		}
+	}
 	http.HandleFunc("/", o.handler)
 
 	fmt.Printf("listening to port %s\n", o.Port)
-	http.ListenAndServe(":" + o.Port, nil)
+	http.ListenAndServe(":"+o.Port, nil)
 }
 
-
-func (o*Options) handler(w http.ResponseWriter, r *http.Request) {
+func (o *Options) handler(w http.ResponseWriter, r *http.Request) {
 	title := "Jenkins X golang http example"
 
 	from := ""
@@ -45,4 +61,3 @@ func (o*Options) handler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "Hello from:  "+title+"\n")
 }
-
