@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/sethvargo/go-envconfig"
+	"go.uber.org/atomic"
 	"log"
 	"net/http"
 	"os"
@@ -11,14 +12,22 @@ import (
 )
 
 type Options struct {
-	// Port the port to lisetn to
+	// Port the port to listen to
 	Port string `env:"PORT,default=8080"`
 
-	// Fail should we fail at all?
-	Fail bool `env:"FAIL"`
+	// Crash should we crash the process at the CrashDuration
+	Crash bool `env:"CRASH"`
 
 	// CrashDuration should we periodically fail
 	CrashDuration time.Duration `env:"CRASH_DURATION"`
+
+	// RequestFailCount how often should we fail a request. Zero means no failures, otherwise its every X requests we return a fail
+	RequestFailCount int `env:"REQUEST_FAIL"`
+
+	// RequestErrorCode the HTTP code returned when failing http requests
+	RequestErrorCode int `env:"REQUEST_ERROR_CODE,default=404"`
+
+	requestCounter atomic.Int32
 }
 
 func main() {
@@ -31,7 +40,7 @@ func main() {
 		return
 	}
 
-	if o.Fail {
+	if o.Crash {
 		if o.CrashDuration.Milliseconds() > 0 {
 			f := func() {
 				fmt.Println("simulating crash now...")
@@ -49,6 +58,17 @@ func main() {
 }
 
 func (o *Options) handler(w http.ResponseWriter, r *http.Request) {
+	m := o.RequestFailCount
+	if m > 0 {
+		c := int(o.requestCounter.Add(1))
+		if c%m == 0 {
+			fmt.Printf("failing request with %v", o.RequestErrorCode)
+			w.WriteHeader(o.RequestErrorCode)
+			w.Write([]byte("simulating failure of service"))
+			return
+		}
+	}
+
 	title := "Jenkins X golang http example"
 
 	from := ""

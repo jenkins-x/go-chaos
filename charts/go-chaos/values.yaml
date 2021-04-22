@@ -1,11 +1,23 @@
 # to enable/disable failing of this project set these values...
 env:
-  FAIL: true
+  # Crashing configuration
+
+  # if enabled the process crashes
+  CRASH: true
+
+  # the period of time before the process crashes if crash is enabled.
+  # Uses https://golang.org/pkg/time/#ParseDuration
   CRASH_DURATION: 10s
 
+  # Http request failing
+  # set to 0 for no request failing, 1 for every request, N for the nth request to fail
+  REQUEST_FAIL: 0
+
+  # the HTTP request failure code if failing a request
+  REQUEST_ERROR_CODE: 404
 
 
-# Declare variables to be passed into your templates.
+# other k8s settings
 replicaCount: 1
 image:
   repository: draft
