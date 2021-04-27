@@ -22,4 +22,3 @@ To modify failures in this quickstart edit the [charts/go-chaos/values.yaml](cha
   * setting to `2` fails every other request
   * setting to N fails every Nth request
 * `REQUEST_ERROR_CODE` the http status code to return for failures. Defaults to `404`    
-
