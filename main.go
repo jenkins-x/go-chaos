@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/sethvargo/go-envconfig"
 	"go.uber.org/atomic"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -31,6 +31,8 @@ type Options struct {
 }
 
 func main() {
+	log.Logger().Infof("starting up")
+
 	o := &Options{}
 	ctx := context.TODO()
 	err := envconfig.Process(ctx, o)
@@ -43,17 +45,17 @@ func main() {
 	if o.Crash {
 		if o.CrashDuration.Milliseconds() > 0 {
 			f := func() {
-				fmt.Println("simulating crash now...")
+				log.Logger().Infof("simulating crash now...")
 				os.Exit(1)
 			}
-			fmt.Printf("will crash in %v\n", o.CrashDuration)
+			log.Logger().Infof("will crash in %v\n", o.CrashDuration)
 			t := time.AfterFunc(o.CrashDuration, f)
 			defer t.Stop()
 		}
 	}
 	http.HandleFunc("/", o.handler)
 
-	fmt.Printf("listening to port %s\n", o.Port)
+	log.Logger().Infof("listening to port %s\n", o.Port)
 	http.ListenAndServe(":"+o.Port, nil)
 }
 
@@ -62,7 +64,7 @@ func (o *Options) handler(w http.ResponseWriter, r *http.Request) {
 	if m > 0 {
 		c := int(o.requestCounter.Add(1))
 		if c%m == 0 {
-			fmt.Printf("failing request with %v", o.RequestErrorCode)
+			log.Logger().Errorf("failing request with %v", o.RequestErrorCode)
 			w.WriteHeader(o.RequestErrorCode)
 			w.Write([]byte("simulating failure of service"))
 			return
@@ -76,7 +78,7 @@ func (o *Options) handler(w http.ResponseWriter, r *http.Request) {
 		from = r.URL.String()
 	}
 	if from != "/favicon.ico" {
-		log.Printf("title: %s\n", title)
+		log.Logger().Infof("title: %s\n", title)
 	}
 
 	fmt.Fprintf(w, "Hello from:  "+title+"\n")

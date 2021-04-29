@@ -17,6 +17,16 @@ env:
   REQUEST_ERROR_CODE: 404
 
 
+log:
+  # the service name for logigng
+  service: ""
+  # level such as debug, info, warn
+  level: "info"
+  # json or stackdriver are the common values
+  format: "stackdriver"
+  # lets you skip stack frames in logs
+  stackSkip: ""
+
 # other k8s settings
 replicaCount: 1
 image:
