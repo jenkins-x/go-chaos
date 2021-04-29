@@ -45,7 +45,7 @@ func main() {
 	if o.Crash {
 		if o.CrashDuration.Milliseconds() > 0 {
 			f := func() {
-				log.Logger().Infof("simulating crash now...")
+				log.Logger().Errorf("simulating crash now...")
 				os.Exit(1)
 			}
 			log.Logger().Infof("will crash in %v\n", o.CrashDuration)
